@@ -1,0 +1,52 @@
+@model List<Stones.Models.MouvementStock>
+
+@{
+    ViewData["Title"] = "Historique des sorties";
+}
+
+<h2>Historique des sorties</h2>
+
+<form method="get" asp-action="HistoriqueSorties" class="mb-4">
+    <div class="row">
+        <div class="col-md-3">
+            <label>Date début :</label>
+            <input type="date" name="startDate" class="form-control" value="@ViewBag.StartDate" />
+        </div>
+        <div class="col-md-3">
+            <label>Date fin :</label>
+            <input type="date" name="endDate" class="form-control" value="@ViewBag.EndDate" />
+        </div>
+        <div class="col-md-2 align-self-end">
+            <button type="submit" class="btn btn-primary">Filtrer</button>
+        </div>
+    </div>
+</form>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Total</th>
+            <th>Pierre</th>
+            <th>Quantité</th>
+            <th>Prix unitaire</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var mv in Model)
+        {
+            foreach (var detail in mv.MouvementStockDetails)
+            {
+                <tr>
+                    <td>@mv.Date_mouvement.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@mv.Type_mouvement</td>
+                    <td>@mv.Total</td>
+                    <td>@detail.Pierre.Nom_pierre</td>
+                    <td>@detail.Quantite</td>
+                    <td>@detail.Prix_unitaire</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
