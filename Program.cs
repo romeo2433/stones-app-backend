@@ -40,15 +40,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 var app = builder.Build();
 
 // -----------------
-// Appliquer automatiquement les migrations EF Core
-// -----------------
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    db.Database.Migrate(); // Crée toutes les tables si elles n'existent pas
-}
-
-// -----------------
 // Pipeline HTTP
 // -----------------
 app.UseCors("AllowAll");
