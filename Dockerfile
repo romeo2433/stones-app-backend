@@ -21,5 +21,5 @@ COPY --from=build /app/publish .
 # Port dynamique pour Railway
 ENV ASPNETCORE_URLS=http://+:5000
 
-# Lancer l'application (le DLL a le même nom que ton csproj)
+# Lancer l'application
 ENTRYPOINT ["dotnet", "Stone1234.dll"]
