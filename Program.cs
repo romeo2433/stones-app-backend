@@ -4,7 +4,7 @@ using Stones.Data;
 var builder = WebApplication.CreateBuilder(args);
 
 // -----------------
-// 1️⃣ Ajouter les services AVANT builder.Build()
+// CORS pour React
 // -----------------
 builder.Services.AddCors(options =>
 {
@@ -14,18 +14,42 @@ builder.Services.AddCors(options =>
                         .AllowAnyHeader());
 });
 
+// -----------------
+// Ajouter les contrôleurs
+// -----------------
 builder.Services.AddControllersWithViews();
 
+// -----------------
+// PostgreSQL avec variables Railway
+// -----------------
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("StonesConnection")));
+{
+    var host = Environment.GetEnvironmentVariable("DB_HOST");
+    var port = Environment.GetEnvironmentVariable("DB_PORT");
+    var db = Environment.GetEnvironmentVariable("DB_NAME");
+    var user = Environment.GetEnvironmentVariable("DB_USER");
+    var pass = Environment.GetEnvironmentVariable("DB_PASS");
+
+    var connString = $"Host={host};Port={port};Database={db};Username={user};Password={pass}";
+    options.UseNpgsql(connString);
+});
 
 // -----------------
-// 2️⃣ Construire l'application
+// Construire l'application
 // -----------------
 var app = builder.Build();
 
 // -----------------
-// 3️⃣ Configurer le pipeline HTTP
+// Appliquer automatiquement les migrations EF Core
+// -----------------
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate(); // Crée toutes les tables si elles n'existent pas
+}
+
+// -----------------
+// Pipeline HTTP
 // -----------------
 app.UseCors("AllowAll");
 
@@ -35,9 +59,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
-
 app.UseRouting();
-
 app.UseAuthorization();
 
 // Routes
@@ -51,6 +73,12 @@ app.MapControllerRoute(
     pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 // -----------------
-// 4️⃣ Lancer l'application
+// Port dynamique Railway
+// -----------------
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://0.0.0.0:{port}");
+
+// -----------------
+// Lancer l'application
 // -----------------
 app.Run();
