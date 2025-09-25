@@ -40,6 +40,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             Username = userInfo[0],
             Password = userInfo[1],
             Database = databaseUri.AbsolutePath.TrimStart('/'),
+            SslMode = SslMode.Require,
             SslMode = SslMode.Prefer,
             TrustServerCertificate = true
         };
@@ -72,16 +73,8 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
+app.MapControllers();
 
-// Routes
-app.MapControllerRoute(
-    name: "auth",
-    pattern: "login",
-    defaults: new { controller = "Auth", action = "Login" });
-
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 // -----------------
 // Port dynamique Render
