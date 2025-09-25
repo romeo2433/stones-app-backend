@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Stones.Data;
+using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,18 +21,37 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllersWithViews();
 
 // -----------------
-// PostgreSQL avec variables Railway
+// PostgreSQL avec Render
 // -----------------
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var host = Environment.GetEnvironmentVariable("DB_HOST");
-    var port = Environment.GetEnvironmentVariable("DB_PORT");
-    var db = Environment.GetEnvironmentVariable("DB_NAME");
-    var user = Environment.GetEnvironmentVariable("DB_USER");
-    var pass = Environment.GetEnvironmentVariable("DB_PASS");
+    var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 
-    var connString = $"Host={host};Port={port};Database={db};Username={user};Password={pass}";
-    options.UseNpgsql(connString);
+    if (!string.IsNullOrEmpty(databaseUrl))
+    {
+        // Convertir DATABASE_URL en chaîne compatible Npgsql
+        var databaseUri = new Uri(databaseUrl);
+        var userInfo = databaseUri.UserInfo.Split(':');
+
+        var connStringBuilder = new NpgsqlConnectionStringBuilder
+        {
+            Host = databaseUri.Host,
+            Port = databaseUri.Port,
+            Username = userInfo[0],
+            Password = userInfo[1],
+            Database = databaseUri.AbsolutePath.TrimStart('/'),
+            SslMode = SslMode.Prefer,
+            TrustServerCertificate = true
+        };
+
+        options.UseNpgsql(connStringBuilder.ConnectionString);
+    }
+    else
+    {
+        // fallback local
+        var connString = builder.Configuration.GetConnectionString("StonesConnection");
+        options.UseNpgsql(connString);
+    }
 });
 
 // -----------------
@@ -64,7 +84,7 @@ app.MapControllerRoute(
     pattern: "{controller=Auth}/{action=Login}/{id?}");
 
 // -----------------
-// Port dynamique Railway
+// Port dynamique Render
 // -----------------
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 app.Urls.Add($"http://0.0.0.0:{port}");
