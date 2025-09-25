@@ -40,9 +40,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
             Username = userInfo[0],
             Password = userInfo[1],
             Database = databaseUri.AbsolutePath.TrimStart('/'),
-            SslMode = SslMode.Require,
-            SslMode = SslMode.Prefer,
-            TrustServerCertificate = true
+            SslMode = SslMode.Require // Render exige SSL
         };
 
         options.UseNpgsql(connStringBuilder.ConnectionString);
@@ -73,15 +71,15 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthorization();
-app.MapControllers();
 
+// Mappe automatiquement les contrôleurs API
+app.MapControllers();
 
 // -----------------
 // Port dynamique Render
 // -----------------
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 app.Urls.Add($"http://0.0.0.0:{port}");
-
 
 // -----------------
 // Lancer l'application
